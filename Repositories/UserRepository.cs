@@ -43,8 +43,8 @@ namespace SocialApp.Repositories
             query = query.Where(user => user.UserName != userParams.CurrentUserName);
             query = query.Where(user => user.Gender == userParams.Gender);
 
-            var minDob = DateTime.Today.AddYears(-userParams.maxAge - 1);
-            var maxDob = DateTime.Today.AddYears(-userParams.minAge);
+            var minDob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
+            var maxDob = DateTime.Today.AddYears(-userParams.MinAge);
 
             query = query.Where(user => user.DateOfBirth >= minDob && user.DateOfBirth <= maxDob);
 
@@ -54,7 +54,7 @@ namespace SocialApp.Repositories
                 _ => query.OrderByDescending(user => user.LastActive)
             };
 
-            return await PagedList<MemberDto>.CreateAsync(query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider).AsNoTracking(), userParams.currentPage, userParams.PageSize);
+            return await PagedList<MemberDto>.CreateAsync(query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider).AsNoTracking(), userParams.CurrentPage, userParams.PageSize);
             
         }
 
