@@ -16,6 +16,9 @@ namespace SocialApp.Helpers
             CreateMap<Photo, PhotoDto>();
             CreateMap<MemberUpdateDto, AppUser>();
             CreateMap<RegisterDTO, AppUser>();
+            CreateMap<Message, MessageDto>()
+                .ForMember(dest => dest.SenderPhotoUrl, option => option.MapFrom(s => s.Sender.Photos.FirstOrDefault(x => x.IsMain).Url))
+                .ForMember(dest => dest.RecipientPhotoUrl, option => option.MapFrom(s => s.Recipient.Photos.FirstOrDefault(x => x.IsMain).Url));
         }
     }
 }
