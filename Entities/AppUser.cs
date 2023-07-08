@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 using SocialApp.Extensions;
 
 namespace SocialApp.Entities
 {
-    public class AppUser
+    public class AppUser: IdentityUser<int>
     {
-        public int Id { get; set; }
-        public string UserName { get; set; }
-
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
 
         public DateTime DateOfBirth { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
@@ -30,6 +26,7 @@ namespace SocialApp.Entities
 
         public ICollection<Message> SentMessages { get; set; }
         public ICollection<Message> ReceviedMessages { get; set; }
+        public ICollection<AppUserRole> UserRoles { get; set; }
 
 
         //public int GetAge()

@@ -1,10 +1,11 @@
-﻿using SocialApp.Entities;
+﻿using System.Threading.Tasks;
+using SocialApp.Entities;
 
 namespace SocialApp.Interfaces
 {
     public interface ITokenService
     {
-        string CreateToken(AppUser user);
+        Task<string> CreateToken(AppUser user);
 
     }
 }

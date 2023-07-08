@@ -1,10 +1,14 @@
 ﻿using System.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SocialApp.Entities;
 
 namespace SocialApp.Data
 {
-    public class DataContext: DbContext
+    public class DataContext: IdentityDbContext<AppUser, AppRole, int,
+        IdentityUserClaim<int>, AppUserRole, IdentityUserLogin<int>,
+        IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public DataContext(DbContextOptions<DataContext> options): base(options)
         {
@@ -14,12 +18,27 @@ namespace SocialApp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AppUser>()
+                .HasMany(u => u.UserRoles)
+                .WithOne(ur => ur.User)
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired();
+
+            modelBuilder.Entity<AppRole>()
+                .HasMany(r => r.UserRoles)
+                .WithOne(ur => ur.Role)
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired();
+
             modelBuilder.Entity<UserLike>().HasKey(k => new {k.SourceUserId, k.LikedUserId});
+
             modelBuilder.Entity<UserLike>()
                 .HasOne(s => s.SourceUser)
                 .WithMany(l => l.LikedUsers)
                 .HasForeignKey(s => s.SourceUserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
             modelBuilder.Entity<UserLike>()
                 .HasOne(s => s.LikedUser)
                 .WithMany(l => l.LikedByUsers)
@@ -30,13 +49,15 @@ namespace SocialApp.Data
                 .HasOne(s => s.Sender)
                 .WithMany(l => l.SentMessages)
                 .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Message>()
                 .HasOne(s => s.Recipient)
                 .WithMany(l => l.ReceviedMessages)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            
         }
 
-        public DbSet<AppUser> Users { get; set; }
         public DbSet<UserLike> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
     }

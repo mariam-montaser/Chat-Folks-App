@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocialApp.Data;
@@ -15,13 +16,15 @@ namespace SocialApp.Controllers
 {
     public class AccountsController : BaseController
     {
-        private readonly DataContext _context;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
 
-        public AccountsController(DataContext context, ITokenService tokenService, IMapper mapper)
+        public AccountsController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, IMapper mapper)
         {
-            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _tokenService = tokenService;
             _mapper = mapper;
         }
@@ -33,20 +36,19 @@ namespace SocialApp.Controllers
 
             var user = _mapper.Map<AppUser>(userData);
 
-            using var hmac = new HMACSHA512();
-
-
             user.UserName = user.UserName.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(userData.Password));
-            user.PasswordSalt = hmac.Key;
            
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var result = await _userManager.CreateAsync(user, userData.Password);
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+
+            if(!roleResult.Succeeded) return BadRequest(roleResult.Errors);
 
             return new UserToReturnDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAs = user.KnownAs,
                 Gender = user.Gender
@@ -56,38 +58,28 @@ namespace SocialApp.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserToReturnDto>> Login(LoginDTO userData)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(user => user.UserName == userData.Username);
+            var user = await _userManager.Users.Include(user => user.Photos).SingleOrDefaultAsync(user => user.UserName == userData.Username.ToLower());
             if (user == null) return Unauthorized("Invalid Credentials");
 
-            if (!IsMatchedGivenPassword(user, userData.Password)) return Unauthorized("Invalid Credentials.");
+            var result = await _signInManager.CheckPasswordSignInAsync(user, userData.Password, false);
+
+            if (!result.Succeeded) return Unauthorized("Invalid Credentials.");
 
             return new UserToReturnDto
             {
                 Username = user.UserName,
                 KnownAs = user.KnownAs,
                 PhotoUrl = user.Photos?.FirstOrDefault(x => x.IsMain)?.Url,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 Gender = user.Gender
             }; 
         }
 
         private async Task<bool> isUsernsameExist(string username)
         {
-            return await _context.Users.AnyAsync(user => user.UserName == username);
+            return await _userManager.Users.AnyAsync(user => user.UserName == username.ToLower());
         }
 
-        private bool IsMatchedGivenPassword(AppUser user, string givenPass)
-        {
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-
-            var Hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(givenPass));
-
-            for (int i = 0; i < Hash.Length; i++)
-            {
-                if (user.PasswordHash[i] != Hash[i]) return false;
-            }
-
-            return true;
-        }
+       
     }
 }
