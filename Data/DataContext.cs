@@ -55,10 +55,16 @@ namespace SocialApp.Data
                 .WithMany(l => l.ReceviedMessages)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
+            modelBuilder.Entity<Group>()
+                .HasMany(g => g.Connections)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
 
         public DbSet<UserLike> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
     }
 }

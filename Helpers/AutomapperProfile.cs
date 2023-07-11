@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AutoMapper;
 using SocialApp.DTOs;
 using SocialApp.Entities;
@@ -19,6 +20,7 @@ namespace SocialApp.Helpers
             CreateMap<Message, MessageDto>()
                 .ForMember(dest => dest.SenderPhotoUrl, option => option.MapFrom(s => s.Sender.Photos.FirstOrDefault(x => x.IsMain).Url))
                 .ForMember(dest => dest.RecipientPhotoUrl, option => option.MapFrom(s => s.Recipient.Photos.FirstOrDefault(x => x.IsMain).Url));
+            CreateMap<DateTime, DateTime>().ConstructUsing(d => DateTime.SpecifyKind(d, DateTimeKind.Utc));
         }
     }
 }

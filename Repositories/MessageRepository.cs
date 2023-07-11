@@ -23,6 +23,12 @@ namespace SocialApp.Repositories
             _context = context;
             _mapper = mapper;
         }
+
+        public void AddGroup(Group group)
+        {
+            _context.Groups.Add(group);
+        }
+
         public void AddMessage(Message message)
         {
             _context.Messages.Add(message);
@@ -31,6 +37,16 @@ namespace SocialApp.Repositories
         public void DeleteMessage(Message message)
         {
             _context.Messages.Remove(message);
+        }
+
+        public async Task<Connection> GetConnection(string connectionId)
+        {
+            return await _context.Connections.FindAsync(connectionId);
+        }
+
+        public async Task<Group> GetGroupForConnection(string connectionId)
+        {
+            return await _context.Groups.Include(g => g.Connections).Where(g => g.Connections.Any(c => c.ConnectionId == connectionId)).FirstOrDefaultAsync();
         }
 
         public async Task<Message> GetMessage(int id)
@@ -56,6 +72,11 @@ namespace SocialApp.Repositories
             var messages = query.ProjectTo<MessageDto>(_mapper.ConfigurationProvider);
 
             return await PagedList<MessageDto>.CreateAsync(messages, pageNumber, pageSize);
+        }
+
+        public async Task<Group> GetMessagesGroup(string groupName)
+        {
+            return await _context.Groups.Include(g => g.Connections).FirstOrDefaultAsync(g => g.Name == groupName);
         }
 
         public async Task<IEnumerable<MessageDto>> GetMessagesThread(string currentUsername, string recipientUsername)
@@ -87,6 +108,11 @@ namespace SocialApp.Repositories
 
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
 
+        }
+
+        public void RemoveConnection(Connection connection)
+        {
+            _context.Connections.Remove(connection);
         }
 
         public async Task<bool> SaveAllAsync()

@@ -4,6 +4,7 @@ using SocialApp.Helpers;
 using SocialApp.Interfaces;
 using SocialApp.Repositories;
 using SocialApp.Services;
+using SocialApp.SignalR;
 
 namespace SocialApp.Extensions
 {
@@ -11,6 +12,7 @@ namespace SocialApp.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ILikesRepository, LikesRepository>();
