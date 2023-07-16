@@ -11,7 +11,7 @@ namespace SocialApp.Interfaces
         void AddGroup(Group group);
         void RemoveConnection(Connection connection);
         Task<Connection> GetConnection(string connectionId);
-        Task<Group> GetMessagesGroup(string groupName);
+        Task<Group> GetMessageGroup(string groupName);
         Task<Group> GetGroupForConnection(string connectionId);
         void AddMessage(Message message);
         void DeleteMessage(Message message);
@@ -20,8 +20,7 @@ namespace SocialApp.Interfaces
 
         Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams);
 
-        Task<IEnumerable<MessageDto>> GetMessagesThread(string currentUsername, string recipientUsername);
+        Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername);
 
-        Task<bool> SaveAllAsync();
     }
 }

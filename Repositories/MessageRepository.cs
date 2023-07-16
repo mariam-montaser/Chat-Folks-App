@@ -46,12 +46,22 @@ namespace SocialApp.Repositories
 
         public async Task<Group> GetGroupForConnection(string connectionId)
         {
-            return await _context.Groups.Include(g => g.Connections).Where(g => g.Connections.Any(c => c.ConnectionId == connectionId)).FirstOrDefaultAsync();
+            return await _context.Groups
+                .Include(c => c.Connections)
+                .Where(c => c.Connections.Any(x => x.ConnectionId == connectionId))
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Message> GetMessage(int id)
         {
             return await _context.Messages.Include(u => u.Sender).Include(u => u.Recipient).FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task<Group> GetMessageGroup(string groupName)
+        {
+            return await _context.Groups
+                .Include(x => x.Connections)
+                .FirstOrDefaultAsync(x => x.Name == groupName);
         }
 
         public async Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams)
@@ -74,12 +84,7 @@ namespace SocialApp.Repositories
             return await PagedList<MessageDto>.CreateAsync(messages, pageNumber, pageSize);
         }
 
-        public async Task<Group> GetMessagesGroup(string groupName)
-        {
-            return await _context.Groups.Include(g => g.Connections).FirstOrDefaultAsync(g => g.Name == groupName);
-        }
-
-        public async Task<IEnumerable<MessageDto>> GetMessagesThread(string currentUsername, string recipientUsername)
+        public async Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername)
         {
 
             var messages = await _context.Messages
@@ -115,10 +120,6 @@ namespace SocialApp.Repositories
             _context.Connections.Remove(connection);
         }
 
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
-        }
 
         
     }

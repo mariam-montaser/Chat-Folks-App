@@ -10,8 +10,8 @@ using SocialApp.Data;
 namespace SocialApp.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230708160021_AddSignalRTablesGroupsAndConnections")]
-    partial class AddSignalRTablesGroupsAndConnections
+    [Migration("20230713155651_new")]
+    partial class @new
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

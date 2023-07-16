@@ -14,14 +14,12 @@ namespace SocialApp.Controllers
 
     public class MessagesController : BaseController
     {
-        private readonly IMessageRepository _messageRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public MessagesController(IMessageRepository messageRepository, IUserRepository userRepository, IMapper mapper)
+        public MessagesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _messageRepository = messageRepository;
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
@@ -34,8 +32,8 @@ namespace SocialApp.Controllers
 
             if (username == recipientUsername) return BadRequest("You can't message yourself");
 
-            var sender = await _userRepository.GetUserByNameAsync(username);
-            var recipient = await _userRepository.GetUserByNameAsync(recipientUsername);
+            var sender = await _unitOfWork.UserRepository.GetUserByNameAsync(username);
+            var recipient = await _unitOfWork.UserRepository.GetUserByNameAsync(recipientUsername);
 
             var message = new Message
             {
@@ -46,9 +44,9 @@ namespace SocialApp.Controllers
                 Content = createMessageDto.Content
             };
 
-            _messageRepository.AddMessage(message);
+            _unitOfWork.MessageRepository.AddMessage(message);
 
-            if (await _messageRepository.SaveAllAsync()) return Ok(_mapper.Map<MessageDto>(message));
+            if (await _unitOfWork.Complete()) return Ok(_mapper.Map<MessageDto>(message));
 
             return BadRequest("Failed to send the message");
         }
@@ -58,7 +56,7 @@ namespace SocialApp.Controllers
         {
             messageParams.Username = User.GetUsername();
 
-            var messages = await _messageRepository.GetMessagesForUser(messageParams);
+            var messages = await _unitOfWork.MessageRepository.GetMessagesForUser(messageParams);
             Response.AddPaginationHeader(messages.PageSize, messages.TotalCount, messages.CurrentPage, messages.TotalPages);
             return Ok(messages);
         }
@@ -67,7 +65,7 @@ namespace SocialApp.Controllers
         public async Task<ActionResult<IEnumerable<MessageDto>>> GetMessageThread(string username)
         {
             var currentUsername = User.GetUsername();
-            return Ok(await _messageRepository.GetMessagesThread(currentUsername, username));
+            return Ok(await _unitOfWork.MessageRepository.GetMessageThread(currentUsername, username));
 
         }
 
@@ -75,7 +73,7 @@ namespace SocialApp.Controllers
         public async Task<ActionResult<MessageDto>> DeleteMessage(int id)
         {
             var username = User.GetUsername();
-            var message = await _messageRepository.GetMessage(id);
+            var message = await _unitOfWork.MessageRepository.GetMessage(id);
             var senderUsername = message.Sender.UserName;
             var recipientUsername = message.Recipient.UserName;
 
@@ -84,9 +82,9 @@ namespace SocialApp.Controllers
             if (username == senderUsername) message.SenderDeleted = true;
             if (username == recipientUsername) message.RecipientDeleted = true;
 
-            if (message.SenderDeleted && message.RecipientDeleted) _messageRepository.DeleteMessage(message);
+            if (message.SenderDeleted && message.RecipientDeleted) _unitOfWork.MessageRepository.DeleteMessage(message);
 
-            if (await _messageRepository.SaveAllAsync()) return Ok();
+            if (await _unitOfWork.Complete()) return Ok();
             return BadRequest("Problem to delete message.");
         }
 

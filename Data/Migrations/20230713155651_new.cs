@@ -2,7 +2,7 @@
 
 namespace SocialApp.Data.Migrations
 {
-    public partial class AddSignalRTablesGroupsAndConnections : Migration
+    public partial class @new : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

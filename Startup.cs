@@ -78,7 +78,7 @@ namespace SocialApp
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<PresenceHub>("hubs/presence");
-                endpoints.MapHub<MessageHub>("hubs/message");
+                endpoints.MapHub<MessageHub>("hubs/messages");
             });
         }
     }
